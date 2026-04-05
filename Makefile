@@ -3,6 +3,13 @@
 ENV_FILE=.env
 MIGRATIONS_FOLDER=./data/migrations
 
+setup-local: # setup-local-stripe
+	echo "Setting up the local environment"
+	docker compose -f ./docker/docker-compose.local.yml up -d
+
+run-server:
+	go run ./cmd/server/
+
 env-example:
 	echo "Generating .env.example from .env"
 	awk -F'=' 'BEGIN {OFS="="} \
@@ -10,6 +17,14 @@ env-example:
     	/^[[:space:]]*$$/ {print ""; next} \
     	NF>=1 {gsub(/^[[:space:]]+|[[:space:]]+$$/, "", $$1); print $$1"="}' .env > .env.example
 	echo ".env.example generated successfully."
+
+sqlc-gen:
+	echo "Generating Go code from SQL queries using sqlc"
+	docker run --rm -v $(PWD):/src -w /src sqlc/sqlc:1.30.0 generate
+
+mockery-gen:
+	echo "Generating mock implementations using mockery"
+	docker run --rm -v $(PWD):/src -w /src vektra/mockery:v3.7.0
 
 install-goose:
 	echo "Installing the Goose database migration tool"
@@ -36,10 +51,3 @@ setup-local-stripe: install-stripe-mock
 	echo "Setting up the local Stripe API"
 	stripe-mock -http-port 12111
 
-setup-local: setup-local-stripe
-	echo "Setting up the local environment"
-	docker compose -f ./docker/docker-compose.local.yml up -d
-
-sqlc-gen:
-	echo "Generating Go code from SQL queries using sqlc"
-	docker run --rm -v $(pwd):/src -w /src sqlc/sqlc:1.30.0 generate

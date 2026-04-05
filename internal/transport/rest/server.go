@@ -38,7 +38,7 @@ func NewServer(
 }
 
 func (s *Server) Run() error {
-	err := middlewares.InitMetrics(s.meter)
+	err := middlewares.InitMetricsMiddleware(s.meter)
 	if err != nil {
 		return err
 	}
@@ -59,7 +59,9 @@ func (s *Server) Shutdown(ctx context.Context) error {
 
 func (s *Server) registerRoutes() {
 	s.router.Route("/api/v1/plans", func(r chi.Router) {
-		r.Get("/", s.planHandler.GetPlanList)
+		r.Use(middlewares.MetricMiddleware)
+
+		r.With(middlewares.Pagination).Get("/", s.planHandler.ListPlans)
 		r.Post("/", s.planHandler.CreatePlan)
 		r.Get("/{id}", s.planHandler.GetPlanByID)
 		r.Put("/{id}", s.planHandler.UpdatePlan)

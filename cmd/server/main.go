@@ -7,11 +7,12 @@ import (
 
 	"github.com/tuanta7/chasingpaper/internal/config"
 	"github.com/tuanta7/chasingpaper/internal/plan"
+	"github.com/tuanta7/chasingpaper/internal/repository/postgres"
+	"github.com/tuanta7/chasingpaper/internal/repository/store"
 	"github.com/tuanta7/chasingpaper/internal/transport/rest"
 	"github.com/tuanta7/chasingpaper/internal/transport/rest/handlers"
 	"github.com/tuanta7/chasingpaper/pkg/graceful"
 	"github.com/tuanta7/chasingpaper/pkg/monitor"
-	"github.com/tuanta7/chasingpaper/pkg/postgres"
 	"github.com/urfave/cli/v3"
 )
 
@@ -26,9 +27,11 @@ func main() {
 			if err != nil {
 				return err
 			}
+			defer pool.Close()
 
-			planRepo := plan.NewPostgresRepository(pool)
-			planUC := plan.NewUseCase(planRepo)
+			pgRepo := store.New(pool)
+
+			planUC := plan.NewUseCase(pgRepo)
 			planHandler := handlers.NewPlanHandler(planUC)
 
 			server := rest.NewServer(cfg.BindAddress, planHandler)
@@ -43,7 +46,7 @@ func main() {
 
 func initMonitor(ctx context.Context, cfg *config.Config) {
 	if !cfg.EnableMetrics {
-		_ = monitor.InitNoopMeterProvider()
+		monitor.InitNoopMeterProvider()
 	} else {
 		_, err := monitor.InitMeterProvider(ctx, cfg.ServiceName, nil)
 		if err != nil {
@@ -52,7 +55,7 @@ func initMonitor(ctx context.Context, cfg *config.Config) {
 	}
 
 	if !cfg.EnableTracing {
-		_ = monitor.InitNoopTracerProvider()
+		monitor.InitNoopTracerProvider()
 	} else {
 		_, err := monitor.InitTracerProvider(ctx, cfg.ServiceName, nil)
 		if err != nil {

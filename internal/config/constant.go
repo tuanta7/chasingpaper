@@ -1,5 +1,5 @@
 package config
 
 const (
-	TopicIdempotentEvent = "event"
+	TopicIdempotentEvent = "chasingpaper.event"
 )

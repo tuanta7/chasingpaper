@@ -3,7 +3,9 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/tuanta7/chasingpaper/internal/plan"
+	"github.com/tuanta7/chasingpaper/internal/transport/rest/middlewares"
 	"github.com/tuanta7/chasingpaper/pkg/httpx"
 )
 
@@ -17,9 +19,18 @@ func NewPlanHandler(uc *plan.UseCase) *PlanHandler {
 	}
 }
 
-func (h *PlanHandler) GetPlanList(w http.ResponseWriter, r *http.Request) {
-	plans := make([]plan.Plan, 0)
-	_ = httpx.ResponseJSON(w, http.StatusOK, plans)
+func (h *PlanHandler) ListPlans(w http.ResponseWriter, r *http.Request) {
+	page, pageSize, _ := middlewares.GetPaginationParams(r.Context())
+
+	plans, err := h.uc.ListPlans(r.Context(), page, pageSize)
+	if err != nil {
+		_ = httpx.ErrorJSON(w, httpx.NewInternalError(httpx.WithHint(err.Error())))
+		return
+	}
+
+	_ = httpx.ResponseJSON(w, http.StatusOK, httpx.JSON{
+		"plans": plans,
+	})
 }
 
 func (h *PlanHandler) GetPlanByID(w http.ResponseWriter, r *http.Request) {

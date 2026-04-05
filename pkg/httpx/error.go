@@ -3,9 +3,10 @@ package httpx
 import "net/http"
 
 type Error struct {
-	Code    int    `json:"code"`
-	Message string `json:"message"`
-	Hint    string `json:"hint,omitempty"`
+	Code        int    `json:"code"`
+	Message     string `json:"message"`
+	Description string `json:"description,omitempty"`
+	Hint        string `json:"hint,omitempty"`
 }
 
 func NewError(code int, message string, opts ...Option) Error {
@@ -29,12 +30,19 @@ func WithHint(hint string) Option {
 	}
 }
 
+func WithDescription(description string) Option {
+	return func(e *Error) {
+		e.Description = description
+	}
+}
+
 func WithMessage(message string) Option {
 	return func(e *Error) {
 		e.Message = message
 	}
 }
 
+// Error implements the error interface.
 func (he Error) Error() string {
 	return he.Message
 }
@@ -43,18 +51,16 @@ func NewInvalidArgumentError(opts ...Option) Error {
 	return NewError(http.StatusBadRequest, "invalid argument", opts...)
 }
 
-func NewUnauthorizedError(opts ...Option) Error {
-	return NewError(http.StatusUnauthorized, "unauthorized", opts...)
-}
-
-func NewForbiddenError(opts ...Option) Error {
-	return NewError(http.StatusForbidden, "forbidden", opts...)
-}
-
-func NewNotFoundError(opts ...Option) Error {
-	return NewError(http.StatusNotFound, "not found", opts...)
-}
-
 func NewInternalError(opts ...Option) Error {
-	return NewError(http.StatusInternalServerError, "internal error", opts...)
+	err := Error{
+		Code:        http.StatusInternalServerError,
+		Message:     "internal error",
+		Description: "something went wrong",
+	}
+
+	for _, opt := range opts {
+		opt(&err)
+	}
+
+	return err
 }

@@ -6,6 +6,8 @@ import (
 	"net/http"
 )
 
+type JSON map[string]any
+
 func DecodeJSON(payload io.Reader, data any) error {
 	decoder := json.NewDecoder(payload)
 	decoder.DisallowUnknownFields()

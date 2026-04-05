@@ -5,6 +5,6 @@ sql:
     schema: "data/migrations/"
     gen:
       go:
-        package: "store"         # The Go package name
-        out: "internal/store"    # The directory where files will be written
-        sql_package: "pgx/v5"
+        package: "store" # The Go package name
+        out: "internal/repository/store"  # The directory where files will be written
+        sql_package: "pgx/v5" # The sql package (driver) to use in the generated code

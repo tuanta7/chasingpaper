@@ -18,7 +18,7 @@ var (
 	requestError metric.Int64Counter
 )
 
-func InitMetrics(meter metric.Meter) (err error) {
+func InitMetricsMiddleware(meter metric.Meter) (err error) {
 	requestTotal, err = meter.Int64Counter("http.server.requests",
 		metric.WithDescription("Number of HTTP requests"),
 		metric.WithUnit("1"),
@@ -102,7 +102,7 @@ func LogMiddleware(logger *monitor.Logger, next http.Handler) http.Handler {
 	})
 }
 
-func Middleware(tracer trace.Tracer, logger *monitor.Logger, next http.Handler) http.Handler {
+func MonitorMiddleware(tracer trace.Tracer, logger *monitor.Logger, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		LogMiddleware(logger, TraceMiddleware(tracer, MetricMiddleware(next))).ServeHTTP(w, r)
 	})

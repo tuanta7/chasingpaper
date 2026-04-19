@@ -14,7 +14,7 @@ type Plan struct {
 	Description string `json:"description"`
 	UsageType   string `json:"usage_type"`
 	CreateTime  string `json:"create_time"`
-	Links       []link `json:"links"`
+	Links       []Link `json:"links"`
 }
 
 type PlanDetails struct {
@@ -25,7 +25,7 @@ type listPlansResponse struct {
 	TotalItems int    `json:"total_items"`
 	TotalPages int    `json:"total_pages"`
 	Plans      []Plan `json:"plans"`
-	Links      []link `json:"links"`
+	Links      []Link `json:"links"`
 }
 
 func (c *Client) ListPlans(ctx context.Context) ([]Plan, error) {
@@ -46,4 +46,19 @@ func (c *Client) ListPlans(ctx context.Context) ([]Plan, error) {
 	}
 
 	return data.Plans, nil
+}
+
+func (c *Client) GetPlan(ctx context.Context, planID string) (*Plan, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.baseURL+pathV2Plans+planID, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	return nil, nil
 }

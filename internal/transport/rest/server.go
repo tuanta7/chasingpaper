@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/tuanta7/chasingpaper/internal/transport/rest/handlers"
-	"github.com/tuanta7/chasingpaper/internal/transport/rest/middlewares"
+	"github.com/tuanta7/chasingpaper/internal/transport/rest/handler"
+	"github.com/tuanta7/chasingpaper/internal/transport/rest/middleware"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/metric"
 )
@@ -16,13 +16,13 @@ import (
 type Server struct {
 	server      *http.Server
 	router      chi.Router
-	planHandler *handlers.PlanHandler
+	planHandler *handler.PlanHandler
 	meter       metric.Meter
 }
 
 func NewServer(
 	addr string,
-	planHandler *handlers.PlanHandler,
+	planHandler *handler.PlanHandler,
 ) *Server {
 	router := chi.NewRouter()
 
@@ -38,8 +38,7 @@ func NewServer(
 }
 
 func (s *Server) Run() error {
-	err := middlewares.InitMetricsMiddleware(s.meter)
-	if err != nil {
+	if err := middleware.InitMetricsMiddleware(s.meter); err != nil {
 		return err
 	}
 
@@ -59,9 +58,9 @@ func (s *Server) Shutdown(ctx context.Context) error {
 
 func (s *Server) registerRoutes() {
 	s.router.Route("/api/v1/plans", func(r chi.Router) {
-		r.Use(middlewares.MetricMiddleware)
+		r.Use(middleware.WithMetric)
 
-		r.With(middlewares.Pagination).Get("/", s.planHandler.ListPlans)
+		r.With(middleware.Pagination).Get("/", s.planHandler.ListPlans)
 		r.Post("/", s.planHandler.CreatePlan)
 		r.Get("/{id}", s.planHandler.GetPlanByID)
 		r.Put("/{id}", s.planHandler.UpdatePlan)

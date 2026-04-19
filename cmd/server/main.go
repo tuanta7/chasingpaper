@@ -6,11 +6,11 @@ import (
 	"os"
 
 	"github.com/tuanta7/chasingpaper/internal/config"
-	"github.com/tuanta7/chasingpaper/internal/plan"
 	"github.com/tuanta7/chasingpaper/internal/repository/postgres"
 	"github.com/tuanta7/chasingpaper/internal/repository/store"
 	"github.com/tuanta7/chasingpaper/internal/transport/rest"
-	"github.com/tuanta7/chasingpaper/internal/transport/rest/handlers"
+	"github.com/tuanta7/chasingpaper/internal/transport/rest/handler"
+	"github.com/tuanta7/chasingpaper/internal/usecase/plan"
 	"github.com/tuanta7/chasingpaper/pkg/graceful"
 	"github.com/tuanta7/chasingpaper/pkg/monitor"
 	"github.com/urfave/cli/v3"
@@ -32,7 +32,7 @@ func main() {
 			pgRepo := store.New(pool)
 
 			planUC := plan.NewUseCase(pgRepo)
-			planHandler := handlers.NewPlanHandler(planUC)
+			planHandler := handler.NewPlanHandler(planUC)
 
 			server := rest.NewServer(cfg.BindAddress, planHandler)
 			return graceful.StartServerWithGracefulShutdown(server)

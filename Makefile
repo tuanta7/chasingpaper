@@ -1,7 +1,8 @@
-.PHONY: setup sqlc-gen
+.PHONY: setup-local run-server env-example sqlc-gen mockery-gen install-goose migrate-sql migrate-up migrate-down
 
 ENV_FILE=.env
 MIGRATIONS_FOLDER=./data/migrations
+GOOSE_VERSION=v3.27.0
 
 setup-local: # setup-local-stripe
 	echo "Setting up the local environment"
@@ -28,7 +29,7 @@ mockery-gen:
 
 install-goose:
 	echo "Installing the Goose database migration tool"
-	go install github.com/pressly/goose/v3/cmd/goose@latest
+	go install github.com/pressly/goose/v3/cmd/goose@$(GOOSE_VERSION)
 	ls "$(shell go env GOPATH)/bin/" | grep goose
 
 migrate-sql:

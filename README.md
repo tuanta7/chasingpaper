@@ -34,6 +34,10 @@ TBD: Stripe integration will be added after the initial release.
 make run-server
 ```
 
+## Outbox Pattern with Kafka
+
+
+
 ## Support
 
 For issues and feature requests, please open an issue on GitHub.

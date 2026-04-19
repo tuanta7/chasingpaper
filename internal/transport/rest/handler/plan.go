@@ -1,11 +1,10 @@
-package handlers
+package handler
 
 import (
 	"net/http"
 
-	"github.com/go-chi/chi/v5/middleware"
-	"github.com/tuanta7/chasingpaper/internal/plan"
-	"github.com/tuanta7/chasingpaper/internal/transport/rest/middlewares"
+	"github.com/tuanta7/chasingpaper/internal/transport/rest/middleware"
+	"github.com/tuanta7/chasingpaper/internal/usecase/plan"
 	"github.com/tuanta7/chasingpaper/pkg/httpx"
 )
 
@@ -20,7 +19,7 @@ func NewPlanHandler(uc *plan.UseCase) *PlanHandler {
 }
 
 func (h *PlanHandler) ListPlans(w http.ResponseWriter, r *http.Request) {
-	page, pageSize, _ := middlewares.GetPaginationParams(r.Context())
+	page, pageSize, _ := middleware.GetPaginationParams(r.Context())
 
 	plans, err := h.uc.ListPlans(r.Context(), page, pageSize)
 	if err != nil {

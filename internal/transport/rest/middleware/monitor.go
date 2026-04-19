@@ -1,4 +1,4 @@
-package middlewares
+package middleware
 
 import (
 	"net/http"
@@ -52,7 +52,7 @@ func (w *responseWriter) WriteHeader(code int) {
 	w.ResponseWriter.WriteHeader(code)
 }
 
-func MetricMiddleware(next http.Handler) http.Handler {
+func WithMetric(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		rw := newResponseWriter(w)
 		next.ServeHTTP(rw, r)
@@ -73,7 +73,7 @@ func MetricMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func TraceMiddleware(tracer trace.Tracer, next http.Handler) http.Handler {
+func WithTrace(tracer trace.Tracer, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Continue trace from upstream by extracting the remote parent span context.
 		parentCtx := otel.GetTextMapPropagator().Extract(r.Context(), propagation.HeaderCarrier(r.Header))
@@ -91,7 +91,7 @@ func TraceMiddleware(tracer trace.Tracer, next http.Handler) http.Handler {
 	})
 }
 
-func LogMiddleware(logger *monitor.Logger, next http.Handler) http.Handler {
+func WithLog(logger *monitor.Logger, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		logger.Info("Request received",
 			zap.String("method", r.Method),
@@ -102,8 +102,8 @@ func LogMiddleware(logger *monitor.Logger, next http.Handler) http.Handler {
 	})
 }
 
-func MonitorMiddleware(tracer trace.Tracer, logger *monitor.Logger, next http.Handler) http.Handler {
+func WithTelemetry(tracer trace.Tracer, logger *monitor.Logger, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		LogMiddleware(logger, TraceMiddleware(tracer, MetricMiddleware(next))).ServeHTTP(w, r)
+		WithLog(logger, WithTrace(tracer, WithMetric(next))).ServeHTTP(w, r)
 	})
 }

@@ -1,58 +1,84 @@
 package monitor
 
 import (
+	"context"
 	"os"
 
 	"go.opentelemetry.io/contrib/bridges/otelzap"
-	"go.opentelemetry.io/otel/sdk/log"
+	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc"
+	sdklog "go.opentelemetry.io/otel/sdk/log"
+	"go.opentelemetry.io/otel/sdk/resource"
+	semconv "go.opentelemetry.io/otel/semconv/v1.39.0"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"google.golang.org/grpc"
 )
 
 type Logger struct {
-	logger *zap.Logger
-	bridge *otelzap.Core
+	*zap.Logger
 }
 
-func NewLogger(level ...zapcore.Level) (*Logger, error) {
+func NewNoopLogger() *Logger {
+	return &Logger{
+		Logger: zap.NewNop(),
+	}
+}
+
+func NewLogger(ctx context.Context, serviceName string, gc *grpc.ClientConn, level ...zapcore.Level) (*Logger, error) {
 	level = append(level, zapcore.InfoLevel)
 
 	cfg := zap.NewProductionConfig()
-	cfg.OutputPaths = []string{"stdout"}
 	cfg.Encoding = "json"
 	cfg.Level = zap.NewAtomicLevelAt(level[0])
 
+	var provider *sdklog.LoggerProvider
+	var err error
+
+	if os.Getenv("LOGGER_OUTPUT") == "otlp" {
+		provider, err = initLoggerProvider(ctx, serviceName, gc)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	zl, err := cfg.Build(
-		zap.WrapCore(func(core zapcore.Core) zapcore.Core {
-			if os.Getenv("LOGGER_OUTPUT") == "stdout" {
-				return core
-			}
-
-			//exporter, _ := otlploggrpc.New(nil, otlploggrpc.WithInsecure())
-
-			provider := log.NewLoggerProvider()
-			return otelzap.NewCore("", otelzap.WithLoggerProvider(provider))
-		}),
 		zap.AddCaller(),
 		zap.AddCallerSkip(1),
+		zap.WrapCore(func(core zapcore.Core) zapcore.Core {
+			if os.Getenv("LOGGER_OUTPUT") == "otlp" {
+				return otelzap.NewCore("", otelzap.WithLoggerProvider(provider))
+			}
+			return core
+		}),
 	)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Logger{
-		logger: zl,
+		Logger: zl,
 	}, nil
 }
 
-func (l *Logger) Info(msg string, fields ...zap.Field) {
-	l.logger.Info(msg, fields...)
-}
+func initLoggerProvider(ctx context.Context, serviceName string, gc *grpc.ClientConn) (*sdklog.LoggerProvider, error) {
+	res, err := resource.New(ctx,
+		resource.WithAttributes(semconv.ServiceNameKey.String(serviceName)),
+	)
+	if err != nil {
+		return nil, err
+	}
 
-func (l *Logger) Error(msg string, fields ...zap.Field) {
-	l.logger.Error(msg, fields...)
+	exporter, err := otlploggrpc.New(ctx, otlploggrpc.WithGRPCConn(gc))
+	if err != nil {
+		return nil, err
+	}
+
+	return sdklog.NewLoggerProvider(
+		sdklog.WithResource(res),
+		sdklog.WithProcessor(sdklog.NewBatchProcessor(exporter)),
+	), nil
 }
 
 func (l *Logger) Close() error {
-	return l.logger.Sync()
+	return l.Logger.Sync()
 }

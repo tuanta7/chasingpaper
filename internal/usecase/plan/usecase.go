@@ -5,8 +5,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/tuanta7/chasingpaper/internal/adapter/paypal"
 	"github.com/tuanta7/chasingpaper/internal/repository/store"
-	"github.com/tuanta7/chasingpaper/pkg/paypal"
 )
 
 type Repository interface {

@@ -39,10 +39,9 @@ func InitMeterProvider(ctx context.Context, serviceName string, gc *grpc.ClientC
 		return nil, err
 	}
 
-	reader := sdkmetric.NewPeriodicReader(otlpExporter)
 	meterProvider := sdkmetric.NewMeterProvider(
 		sdkmetric.WithResource(res),
-		sdkmetric.WithReader(reader),
+		sdkmetric.WithReader(sdkmetric.NewPeriodicReader(otlpExporter)),
 	)
 
 	otel.SetMeterProvider(meterProvider)

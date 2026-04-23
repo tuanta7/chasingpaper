@@ -67,14 +67,6 @@ func (u *UseCase) CreatePlan(ctx context.Context, plan Plan) error {
 	return err
 }
 
-func (u *UseCase) ListPayPalPlans() error {
-	return nil
-}
-
-func (u *UseCase) CreatePrice(ctx context.Context, provider, externalPriceID string) error {
-	return nil
-}
-
-func (u *UseCase) GetPlan() (*Plan, error) {
+func (u *UseCase) GetPlan(ctx context.Context, id uuid.UUID) (*Plan, error) {
 	return nil, nil
 }

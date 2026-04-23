@@ -16,6 +16,8 @@ Chasing Paper relies on some popular Go packages for its codebase.
 | stretchr/testify            | Go testing toolkit with assertions and mocks      |
 | ~~stripe/stripe-go~~        | ~~Stripe Go library for payment processing~~      |
 
+## Auth0 Integration
+
 ## PayPal Integration
 
 Chasing Paper leverages PayPal's REST APIs as the primary payment gateway.

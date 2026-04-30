@@ -1,0 +1,19 @@
+@import "tailwindcss";
+
+@theme {
+  --color-cream-100: #fdfbf7;
+  --color-cream-200: #f4efdf;
+  --color-cream-300: #eaddb9;
+
+  --color-navy-700: #2c3e50;
+  --color-navy-800: #1a252f;
+  --color-navy-900: #0d131a;
+
+  --font-sans: 'Nunito', sans-serif;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-cream-100);
+  color: var(--color-navy-800);
+}

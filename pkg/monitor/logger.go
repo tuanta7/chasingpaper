@@ -34,7 +34,7 @@ func NewLogger(ctx context.Context, serviceName string, gc *grpc.ClientConn, lev
 	var provider *sdklog.LoggerProvider
 	var err error
 
-	if os.Getenv("LOGGER_OUTPUT") == "otlp" {
+	if isOTLPLogger() {
 		provider, err = initLoggerProvider(ctx, serviceName, gc)
 		if err != nil {
 			return nil, err
@@ -45,7 +45,7 @@ func NewLogger(ctx context.Context, serviceName string, gc *grpc.ClientConn, lev
 		zap.AddCaller(),
 		zap.AddCallerSkip(1),
 		zap.WrapCore(func(core zapcore.Core) zapcore.Core {
-			if os.Getenv("LOGGER_OUTPUT") == "otlp" {
+			if isOTLPLogger() {
 				return otelzap.NewCore("", otelzap.WithLoggerProvider(provider))
 			}
 			return core
@@ -58,6 +58,10 @@ func NewLogger(ctx context.Context, serviceName string, gc *grpc.ClientConn, lev
 	return &Logger{
 		Logger: zl,
 	}, nil
+}
+
+func isOTLPLogger() bool {
+	return os.Getenv("LOGGER_OUTPUT") == "otlp"
 }
 
 func initLoggerProvider(ctx context.Context, serviceName string, gc *grpc.ClientConn) (*sdklog.LoggerProvider, error) {

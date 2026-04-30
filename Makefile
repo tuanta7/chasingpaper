@@ -11,6 +11,9 @@ setup-local: # setup-local-stripe
 run-server:
 	go run ./cmd/server/
 
+run-ui:
+	cd ./web && npm install && npm run dev
+
 env-example:
 	echo "Generating .env.example from .env"
 	awk -F'=' 'BEGIN {OFS="="} \
